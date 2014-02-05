@@ -1,0 +1,44 @@
+: Set this field if you want to convert to a specific format,
+: different from the one handled over by MyHomeLib
+:  e.g.:
+:        extension = azw3
+: OR
+: Leave it empty/comment out to avoid this kind of behavior
+extension =
+
+: This flag indicates whether calibre4mhl should check
+: output file metadata, and, in case output format
+: doesn't support 'Series' metadata, append source series
+: (if present) to title. This is useful for kindle users,
+: since both mobi and azw3 formats don't support Series metadata.
+:
+: Enabled by default. Set to true to skip this
+skip_meta_check = false
+
+: If you want to pass additional options to ebook-meta, put them here.
+:   e.g., for mobi format:
+:       args = --mobi-keep-original-images --mobi-file-type=new
+:     to not convert all images to JPEG format, and to set mobi output
+:     file type to KF8 (by default, it is MOBI 6)
+:   or:
+:       args = --cover="C:\cover_image.jpg"
+:     to change output file cover.
+:
+: Remember to use UTF-8 encoding for non-ASCII characters
+: (use some text editor that supports UTF-8 for this, e.g., EditPad Lite)
+args =
+
+: This field points to Calibre dir. If you installed non-portable Calibre,
+: you can leave this field empty, otherwise set it to point to a dir containing
+: Calibre command-line tools (ebook-convert and ebook-meta). In a portable
+: version, they should be in "<unpack_path>\Calibre Portable\Calibre".
+: The path can be absolute, e.g.:
+:      calibre_dir = "C:\Calibre Portable\Calibre"
+: or relative, e.g.:
+:      calibre_dir = "..\..\Calibre Portable\Calibre"
+:      calibre_dir = "\Calibre Portable\Calibre"
+: etc.
+:
+: Make sure that Calibre's absolute path consists of ASCII symbols only,
+: otherwise Calibre's command-line tools won't work!
+calibre_dir =
