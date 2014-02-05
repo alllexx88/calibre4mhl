@@ -15,7 +15,7 @@ extension =
 : Enabled by default. Set to true to skip this
 skip_meta_check = false
 
-: If you want to pass additional options to ebook-meta, put them here.
+: If you want to pass additional options to ebook-convert, put them here.
 :   e.g., for mobi format:
 :       args = --mobi-keep-original-images --mobi-file-type=new
 :     to not convert all images to JPEG format, and to set mobi output
