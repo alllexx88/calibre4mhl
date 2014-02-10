@@ -605,27 +605,27 @@ std::string config::parse_line(void) {
 void config::remove_leading_and_trailing_spaces(void) {
     if (!field.empty()) {
         size_t i = 1;
-        if (field[0] == ' ') {
-            for(; i < field.length() && field[i] == ' '; i++);
-            field.erase(0, i);
-        }
-        i = 1;
         if (field[field.length() - 1] == ' ') {
             for(; i < field.length() && field[field.length() - i - 1] == ' '; i++);
             field.erase(field.length() - i, std::string::npos);
+        }
+        i = 1;
+        if (field[0] == ' ') {
+            for(; i < field.length() && field[i] == ' '; i++);
+            field.erase(0, i);
         }
     }
 
     if (!value.empty()) {
         size_t i = 1;
-        if (value[0] == ' ') {
-            for(; i < value.length() && value[i] == ' '; i++);
-            value.erase(0, i);
-        }
-        i = 1;
         if (value[value.length() - 1] == ' ') {
             for(; i < value.length() && value[value.length() - i - 1] == ' '; i++);
             value.erase(value.length() - i, std::string::npos);
+        }
+        i = 1;
+                if (value[0] == ' ') {
+            for(; i < value.length() && value[i] == ' '; i++);
+            value.erase(0, i);
         }
     }
 }
