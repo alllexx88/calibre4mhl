@@ -623,7 +623,7 @@ void config::remove_leading_and_trailing_spaces(void) {
             value.erase(value.length() - i, std::string::npos);
         }
         i = 1;
-                if (value[0] == ' ') {
+        if (value[0] == ' ') {
             for(; i < value.length() && value[i] == ' '; i++);
             value.erase(0, i);
         }
@@ -761,7 +761,7 @@ int wmain(int argc, wchar_t* argv[]) {
         if (!config.calibre_dir_set)
             std::cout << "\"calibre_dir\" field not found, falling back to default value: calibre_dir =\n";
     } else
-        std::cout << "config.txt not found, falling back to default settings:\nextension =\nskip_meta_check = false\n\n";
+        std::cout << "config.txt not found, falling back to default settings:\nextension =\nskip_meta_check = false\nargs =\ncalibre_dir =\n\n";
 
 	if (argc < 3) {
 		std::cerr << "Not enough arguments\n";
