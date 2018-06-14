@@ -24,11 +24,11 @@ std::wstring calibre_bin = L"";
 //transform input Utf8 string into Windows Unicode wstring
 std::wstring convert_from_utf8_to_utf16(const std::string& str) {
     std::wstring converted_string;
-    int required_size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, 0, 0);
+    int required_size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), 0, 0);
     if (required_size > 0) {
         std::vector<wchar_t> buffer(required_size);
-        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &buffer[0], required_size);
-        converted_string.assign(buffer.begin(), buffer.end() - 1);
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), &buffer[0], required_size);
+        converted_string.assign(buffer.begin(), buffer.end());
     }
 
     return converted_string;
@@ -37,11 +37,11 @@ std::wstring convert_from_utf8_to_utf16(const std::string& str) {
 //transform input Windows Ansi string into Windows Unicode wstring
 std::wstring convert_from_ansi_to_utf16(const std::string& str) {
     std::wstring converted_string;
-    int required_size = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, 0, 0);
+    int required_size = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), 0, 0);
     if (required_size > 0) {
         std::vector<wchar_t> buffer(required_size);
-        MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, &buffer[0], required_size);
-        converted_string.assign(buffer.begin(), buffer.end() - 1);
+        MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), &buffer[0], required_size);
+        converted_string.assign(buffer.begin(), buffer.end());
     }
 
     return converted_string;
@@ -50,21 +50,21 @@ std::wstring convert_from_ansi_to_utf16(const std::string& str) {
 //transform Windows Unicode wstring into Utf8 string
 std::string convert_from_utf16_to_utf8(const std::wstring& wstr) {
     std::string converted_string;
-    int required_size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, 0, 0, 0, 0);
+    int required_size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), 0, 0, 0, 0);
     if(required_size > 0) {
         std::vector<char> buffer(required_size);
-        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &buffer[0], required_size, 0, 0);
-        converted_string.assign(buffer.begin(), buffer.end() - 1);
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), &buffer[0], required_size, 0, 0);
+        converted_string.assign(buffer.begin(), buffer.end());
     }
     return converted_string;
 }
 
 //launch with args and append a line to commandline
 unsigned long launch(const std::vector<std::wstring>& args, const std::wstring& append_line = L"") {
-	unsigned long exitCode;
+    unsigned long exitCode;
 
-	std::wstring cmd = (std::wstring)_wgetenv (L"COMSPEC") + L" /U /C \"";
-	wchar_t* cmdc;
+    std::wstring cmd = (std::wstring)_wgetenv (L"COMSPEC") + L" /U /C \"";
+    wchar_t* cmdc;
 
     for(size_t i = 0; i < args.size(); i++)
         if (args[i].find(L" ") != std::wstring::npos)
@@ -73,58 +73,60 @@ unsigned long launch(const std::vector<std::wstring>& args, const std::wstring& 
             cmd += L" " + args[i];
     cmd += L" " + append_line + L"\"";
 
-	// Set up PROCESS_INFORMATION structure
-	PROCESS_INFORMATION piProcInfo;
-	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+    // Set up PROCESS_INFORMATION structure
+    PROCESS_INFORMATION piProcInfo;
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
-	// Declare process info
-	STARTUPINFO siStartInfo;
+    // Declare process info
+    STARTUPINFO siStartInfo;
 
-	// Set up STARTUPINFO structure.
-	// This structure specifies the STDIN and STDOUT handles for redirection.
-	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
-	siStartInfo.cb = sizeof(STARTUPINFO);
+    // Set up STARTUPINFO structure.
+    // This structure specifies the STDIN and STDOUT handles for redirection.
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+    siStartInfo.cb = sizeof(STARTUPINFO);
 
-	cmdc = new wchar_t [cmd.length() + 1];
-	wcscpy(cmdc, cmd.c_str());
+    cmdc = new wchar_t [cmd.length() + 1];
+    wcscpy(cmdc, cmd.c_str());
 
-	if (!CreateProcess(NULL,
-		cmdc,                       // command line
-		NULL,          				// process security attributes
-		NULL,          				// primary thread security attributes
-		TRUE,                    	// handles are inherited
-		CREATE_UNICODE_ENVIRONMENT, // creation flags
-		NULL,          				// use parent's environment
-		NULL,          				// use parent's current directory
-		&siStartInfo,  				// STARTUPINFO pointer
-		&piProcInfo))  				// receives PROCESS_INFORMATION
-	{
-		delete[] cmdc;
-		throw 3;
-	}
-	// Successfully created the process.  Wait for it to finish.
-	WaitForSingleObject(piProcInfo.hProcess, INFINITE);
+    if (!CreateProcess(NULL,
+        cmdc,                                           // command line
+        NULL,                                           // process security attributes
+        NULL,                                           // primary thread security attributes
+        TRUE,                                           // handles are inherited
+        CREATE_UNICODE_ENVIRONMENT,                     // creation flags
+        NULL,                                           // use parent's environment
+        NULL,                                           // use parent's current directory
+        &siStartInfo,                                   // STARTUPINFO pointer
+        &piProcInfo))                                   // receives PROCESS_INFORMATION
+    {
+        delete[] cmdc;
+        throw 3;
+    }
+    // Successfully created the process.  Wait for it to finish.
+    WaitForSingleObject(piProcInfo.hProcess, INFINITE);
 
-	// Get the exit code.
-	if (!GetExitCodeProcess(piProcInfo.hProcess, &exitCode)) {
-		delete[] cmdc;
-		throw 4;
-	}
+    // Get the exit code.
+    if (!GetExitCodeProcess(piProcInfo.hProcess, &exitCode)) {
+        delete[] cmdc;
+        throw 4;
+    }
 
-	// Close handles to the child process and its primary thread
-	CloseHandle(piProcInfo.hThread);
-	CloseHandle(piProcInfo.hProcess);
+    // Close handles to the child process and its primary thread
+    CloseHandle(piProcInfo.hThread);
+    CloseHandle(piProcInfo.hProcess);
 
-	delete[] cmdc;
-	return exitCode;
+    delete[] cmdc;
+    return exitCode;
 }
 
 //launch command with args and save output to out
 unsigned long launch(const std::vector<std::wstring>& args, std::string& out) {
-	unsigned long exitCode;
+    unsigned long exitCode;
 
-	std::wstring cmd = (std::wstring)_wgetenv (L"COMSPEC") + L" /U /C \"";
-	wchar_t* cmdc;
+    std::wstring cmd = (std::wstring)_wgetenv (L"COMSPEC") + L" /U /C \"";
+    wchar_t* cmdc;
+    DWORD dwRead = 1, TotalBytesAvail;
+    char chBuf[4096];
 
     for(size_t i = 0; i < args.size(); i++)
         if (args[i].find(L" ") != std::wstring::npos)
@@ -133,95 +135,88 @@ unsigned long launch(const std::vector<std::wstring>& args, std::string& out) {
             cmd += L" " + args[i];
     cmd += L"\"";
 
-	// Declare handle
-	HANDLE g_hChildStd_IN_Rd = NULL;
-	HANDLE g_hChildStd_OUT_Rd = NULL;
-	HANDLE g_hChildStd_OUT_Wr = NULL;
+    // Declare handle
+    HANDLE g_hChildStd_IN_Rd = NULL;
+    HANDLE g_hChildStd_OUT_Rd = NULL;
+    HANDLE g_hChildStd_OUT_Wr = NULL;
 
     // Create security attributes
-	SECURITY_ATTRIBUTES saAttr;
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-	saAttr.bInheritHandle = TRUE;
-	saAttr.lpSecurityDescriptor = NULL;
+    SECURITY_ATTRIBUTES saAttr;
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
 
-	// Create a pipe for the child process's STDOUT
-	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0))
-		throw 1;
+    // Create a pipe for the child process's STDOUT
+    if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0))
+        throw 1;
 
-	// Ensure the read handle to the pipe for STDOUT is not inherited
-	if (!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0))
-		throw 2;
+    // Ensure the read handle to the pipe for STDOUT is not inherited
+    if (!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0))
+        throw 2;
 
-	// Set up members of the PROCESS_INFORMATION structure
-	PROCESS_INFORMATION piProcInfo;
-	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+    // Set up members of the PROCESS_INFORMATION structure
+    PROCESS_INFORMATION piProcInfo;
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
-	// Declare process info
-	STARTUPINFO siStartInfo;
+    // Declare process info
+    STARTUPINFO siStartInfo;
 
-	// Set up members of the STARTUPINFO structure.
-	// This structure specifies the STDIN and STDOUT handles for redirection.
-	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
-	siStartInfo.cb = sizeof(STARTUPINFO);
-	siStartInfo.hStdError = g_hChildStd_OUT_Wr;
-	siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
-	siStartInfo.hStdInput = g_hChildStd_IN_Rd;
-	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+    // Set up members of the STARTUPINFO structure.
+    // This structure specifies the STDIN and STDOUT handles for redirection.
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+    siStartInfo.cb = sizeof(STARTUPINFO);
+    siStartInfo.hStdError = g_hChildStd_OUT_Wr;
+    siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+    siStartInfo.hStdInput = g_hChildStd_IN_Rd;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
-	cmdc = new wchar_t [cmd.length() + 1];
-	wcscpy(cmdc, cmd.c_str());
+    cmdc = new wchar_t [cmd.length() + 1];
+    wcscpy(cmdc, cmd.c_str());
 
-	if (!CreateProcess(NULL,
-		cmdc,                       // command line
-		NULL,          				// process security attributes
-		NULL,          				// primary thread security attributes
-		TRUE,                    	// handles are inherited
-		CREATE_UNICODE_ENVIRONMENT, // creation flags
-		NULL,          				// use parent's environment
-		NULL,          				// use parent's current directory
-		&siStartInfo,  				// STARTUPINFO pointer
-		&piProcInfo))  				// receives PROCESS_INFORMATION
-	{
-		delete[] cmdc;
-		throw 3;
-	}
-	// Successfully created the process.  Wait for it to finish.
-	WaitForSingleObject(piProcInfo.hProcess, INFINITE);
-
-	// Get the exit code.
-	if (!GetExitCodeProcess(piProcInfo.hProcess, &exitCode)) {
-		delete[] cmdc;
-		throw 4;
-	}
-
-	// Close handles to the child process and its primary thread
-	CloseHandle(piProcInfo.hThread);
-	CloseHandle(piProcInfo.hProcess);
-
-	// Read output from the child process's pipe for STDOUT
-	// Stop when there is no more data.
-
-
-	// Close the write end of the pipe before reading from the
-	// read end of the pipe, to control child process execution.
-	// The pipe is assumed to have enough buffer space to hold the
-	// data the child process has already written to it.
-	if(!CloseHandle(g_hChildStd_OUT_Wr)){
-		delete[] cmdc;
-		throw 5;
-	}
-	char chBuf[4097];
-	unsigned long dwRead = 1;
-	out="";
-	while (dwRead != 0 && ReadFile(g_hChildStd_OUT_Rd, chBuf, 4096, &dwRead, NULL))
+    if (!CreateProcess(NULL,
+        cmdc,                                           // command line
+        NULL,                                           // process security attributes
+        NULL,                                           // primary thread security attributes
+        TRUE,                                           // handles are inherited
+        CREATE_UNICODE_ENVIRONMENT,                     // creation flags
+        NULL,                                           // use parent's environment
+        NULL,                                           // use parent's current directory
+        &siStartInfo,                                   // STARTUPINFO pointer
+        &piProcInfo))                                   // receives PROCESS_INFORMATION
     {
-        chBuf[4096] = '\0';
+        delete[] cmdc;
+        throw 3;
+    }
+
+    // Read from pipe that is the standard output for child process.
+    for (;;)
+    {
+    // Loop until (cannot read from pipe) or (pipe empty and process exited)
+        if (!PeekNamedPipe(g_hChildStd_OUT_Rd, NULL, 0, NULL, \
+            &TotalBytesAvail, NULL) || // cannot read from pipe
+            ((TotalBytesAvail == 0) && // pipe empty
+             (WaitForSingleObject(piProcInfo.hProcess, 0) == WAIT_OBJECT_0))) // process exited
+            break;
+        if (TotalBytesAvail == 0)
+            continue;
+        ReadFile(g_hChildStd_OUT_Rd, chBuf, 4096, &dwRead, NULL);
         out += chBuf;
     }
 
+    // Get the exit code.
+    if (!GetExitCodeProcess(piProcInfo.hProcess, &exitCode)) {
+        delete[] cmdc;
+        throw 4;
+    }
 
-	delete[] cmdc;
-	return exitCode;
+    // Close handles to the child process and its primary thread
+    CloseHandle(piProcInfo.hThread);
+    CloseHandle(piProcInfo.hProcess);
+    CloseHandle(g_hChildStd_OUT_Rd);
+    CloseHandle(g_hChildStd_OUT_Wr);
+
+    delete[] cmdc;
+    return exitCode;
 }
 
 //remove leading '<field>: '
@@ -269,11 +264,11 @@ void parse_full_filename(const std::wstring& full_filename, std::wstring& parent
             filename[i] = L'\\';
 
     size_t found = filename.rfind(L'\\');
-	if (found == std::wstring::npos) {
+    if (found == std::wstring::npos) {
         parent_path = L".";
 //      filename = full_filename;
         //already equal to full_filename
-	}
+    }
     else {
         parent_path = full_filename.substr(0, found);
         filename = full_filename.substr(found + 1, std::wstring::npos);
@@ -283,7 +278,7 @@ void parse_full_filename(const std::wstring& full_filename, std::wstring& parent
     if (found == std::wstring::npos) {
         extension = L"";
         stem = filename;
-	}
+    }
     else {
         stem = filename.substr(0, found);
         extension = filename.substr(found, std::wstring::npos);
@@ -763,13 +758,13 @@ int wmain(int argc, wchar_t* argv[]) {
     } else
         std::cout << "config.txt not found, falling back to default settings:\nextension =\nskip_meta_check = false\nargs =\ncalibre_dir =\n\n";
 
-	if (argc < 3) {
-		std::cerr << "Not enough arguments\n";
-		return 1;
-	} else { // if we got enough parameters...
-		std::wstring file1 = argv[1], file2 = argv[2];
+    if (argc < 3) {
+        std::cerr << "Not enough arguments\n";
+        return 1;
+    } else { // if we got enough parameters...
+        std::wstring file1 = argv[1], file2 = argv[2];
 
-		std::wstring path, stem, extension;
+        std::wstring path, stem, extension;
             parse_full_filename(file2, path, stem, extension);
 
         if (config.ext_set && !config.ext.empty()) {
@@ -777,7 +772,7 @@ int wmain(int argc, wchar_t* argv[]) {
             file2 = path + L"\\" + stem + extension;
         }
 
-		if (file_exists(file2)) {
+        if (file_exists(file2)) {
             int i;
             for(i=1; file_exists (append_i(file2, i)); i++);
             file2 = append_i(file2, i);
@@ -805,7 +800,7 @@ int wmain(int argc, wchar_t* argv[]) {
             }
 
             if (has_series) {
-                std::cout << "\nSource file has \"Series\" metadata. append_ing series name to destination file title\n";
+                std::cout << "\nSource file has \"Series\" metadata. appending series name to destination file title\n";
 
                 std::vector<std::wstring> out;
 
@@ -886,7 +881,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
             set_meta(file2, L"--title", out[0]);
         }
-	}
+    }
 
-	return 0;
+    return 0;
 }
